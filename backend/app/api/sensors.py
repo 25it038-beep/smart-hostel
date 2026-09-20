@@ -13,6 +13,7 @@ router = APIRouter(tags=["Sensors"])
 
 
 @router.post("/api/sensors/data", response_model=SensorReadingResponse, status_code=201)
+@router.post("/api/sensor-data", response_model=SensorReadingResponse, status_code=201)
 async def ingest_sensor_data(payload: SensorDataCreate, db: Session = Depends(get_db)):
     """
     Ingest live sensor telemetry from ESP32 or simulation engine.
