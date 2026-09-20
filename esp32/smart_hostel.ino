@@ -137,8 +137,13 @@ void readDHTSensor() {
 
 // ========================== NETWORK & HTTP =============================
 bool beginHttp(HTTPClient& http, WiFiClientSecure& secureClient, const String& url) {
+  http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+  http.setTimeout(30000); // 30s timeout to allow for Render cloud cold-starts
+  http.setUserAgent("ESP32-SmartHostel/1.0");
+
   if (url.startsWith("https://")) {
-    secureClient.setInsecure();
+    secureClient.setInsecure(); // Bypass SSL cert validation on ESP32
+    secureClient.setTimeout(30);
     return http.begin(secureClient, url);
   } else {
     return http.begin(url);
