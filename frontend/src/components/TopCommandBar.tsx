@@ -46,10 +46,10 @@ export const TopCommandBar: React.FC<TopCommandBarProps> = ({
           </span>
         </div>
 
-        {/* Agent Online Status */}
+        {/* Live Auto-Refresh Status */}
         <div className="hidden md:flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-950/40 border border-emerald-800/50 text-emerald-400 text-[11px]">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span>Agent Online</span>
+          <span>LIVE 1s AUTO-REFRESH</span>
         </div>
 
         {/* Model Indicator */}

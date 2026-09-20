@@ -104,7 +104,30 @@ export const Dashboard: React.FC<DashboardProps> = ({
   }));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
+      {/* Live 1-Second Telemetry Sync Banner */}
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2 rounded-xl border border-emerald-500/30 bg-emerald-950/20 backdrop-blur-sm text-xs font-mono">
+        <div className="flex items-center gap-2.5 text-emerald-400">
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+          </span>
+          <span className="font-bold tracking-wider">LIVE TELEMETRY STREAM</span>
+          <span className="text-slate-600">•</span>
+          <span className="text-emerald-300/90">Auto-refreshing every 1 second</span>
+        </div>
+        <div className="flex items-center gap-3 text-slate-400 text-[11px]">
+          <span>
+            Last Sample: <span className="text-white font-bold">{latestSensor?.timestamp ? new Date(latestSensor.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'Streaming'}</span>
+          </span>
+          <span className="text-slate-600">|</span>
+          <span className="text-cyan-400 flex items-center gap-1.5 font-semibold">
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+            Active Sub-Second Feed
+          </span>
+        </div>
+      </div>
+
       {/* SECTION 5: METRIC CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* 1. Temperature Card */}

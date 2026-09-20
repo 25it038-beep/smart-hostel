@@ -152,7 +152,7 @@ export function App() {
     return () => clearInterval(timer);
   }, []);
 
-  // High-frequency live data sync (polls every 1500ms for ultra-sensitive real-time updates)
+  // High-frequency live data sync: Auto-refreshes every 1 second (1000ms)
   useEffect(() => {
     const syncTimer = setInterval(async () => {
       if (!activeRoomId) return;
@@ -161,12 +161,18 @@ export function App() {
         if (latest) {
           setLatestSensor(latest);
           setDeviceStatus('CONNECTED');
-          setSecondsSinceSeen(1);
+          setSecondsSinceSeen(0);
+          setHistory((prev) => {
+            if (prev.length === 0 || prev[prev.length - 1].timestamp !== latest.timestamp) {
+              return [...prev.slice(-99), latest];
+            }
+            return prev;
+          });
         }
       } catch (e) {
         // WebSocket handles primary stream
       }
-    }, 1500);
+    }, 1000); // 1-second auto-refresh
 
     return () => clearInterval(syncTimer);
   }, [activeRoomId]);
