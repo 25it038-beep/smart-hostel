@@ -152,6 +152,25 @@ export function App() {
     return () => clearInterval(timer);
   }, []);
 
+  // High-frequency live data sync (polls every 1500ms for ultra-sensitive real-time updates)
+  useEffect(() => {
+    const syncTimer = setInterval(async () => {
+      if (!activeRoomId) return;
+      try {
+        const latest = await api.getLatestSensor(activeRoomId);
+        if (latest) {
+          setLatestSensor(latest);
+          setDeviceStatus('CONNECTED');
+          setSecondsSinceSeen(1);
+        }
+      } catch (e) {
+        // WebSocket handles primary stream
+      }
+    }, 1500);
+
+    return () => clearInterval(syncTimer);
+  }, [activeRoomId]);
+
   const activeRoom = rooms.find((r) => r.room_id === activeRoomId) || null;
 
   return (

@@ -52,9 +52,9 @@ const char* WIFI_PASSWORD   = "YOUR_WIFI_PASSWORD";
 const char* BACKEND_BASE_URL = "https://smart-hostel-et9z.onrender.com";
 
 // ========================== TIMING INTERVALS (ms) ======================
-const unsigned long SENSOR_INTERVAL_MS    = 5000;    // Post telemetry every 5 seconds
-const unsigned long HEARTBEAT_INTERVAL_MS = 10000;   // Post heartbeat every 10 seconds
-const unsigned long COMMAND_POLL_MS       = 3000;    // Check for manual commands every 3s
+const unsigned long SENSOR_INTERVAL_MS    = 1500;    // Fast 1.5s live telemetry stream
+const unsigned long HEARTBEAT_INTERVAL_MS = 8000;    // Post heartbeat every 8 seconds
+const unsigned long COMMAND_POLL_MS       = 2000;    // Check for manual commands every 2s
 const unsigned long WIFI_RETRY_MS         = 10000;   // Retry connecting if disconnected
 
 // ========================== GLOBAL STATE ===============================
@@ -78,8 +78,9 @@ unsigned long lastHeartbeatTime  = 0;
 unsigned long lastCommandPoll    = 0;
 unsigned long lastWiFiRetry      = 0;
 
-// Debounce for PIR
-int lastPirRead = LOW;
+// Forward declaration
+void postSensorData();
+void printSerialTelemetry();
 
 // ========================== RELAY CONTROL ==============================
 void setRelayState(bool turnOn, const char* reason) {
@@ -90,35 +91,48 @@ void setRelayState(bool turnOn, const char* reason) {
   }
 }
 
-// ========================== OFFLINE AUTOMATION =========================
+// ========================== OFFLINE & INSTANT EVENT AUTOMATION =========
 void handleOccupancyAndLight() {
   int pirState = digitalRead(PIR_PIN);
   unsigned long now = millis();
+  bool stateChanged = false;
 
   // Motion detected
   if (pirState == HIGH) {
     lastMotionTime = now;
     if (!currentOccupancy) {
       currentOccupancy = true;
+      stateChanged = true;
       Serial.println("[PIR] Motion detected! Room OCCUPIED.");
     }
     
     // In AUTO mode, turn light ON immediately upon motion
-    if (operatingMode == "AUTO") {
+    if (operatingMode == "AUTO" && !currentLightState) {
       setRelayState(true, "MOTION_DETECTED");
+      stateChanged = true;
     }
   } else {
     // No motion currently being sensed on PIR pin
     // Check if inactivity timeout has elapsed
     if (currentOccupancy && (now - lastMotionTime >= inactivityTimeoutMs)) {
       currentOccupancy = false;
+      stateChanged = true;
       Serial.println("[PIR] Inactivity timeout elapsed. Room EMPTY.");
 
       // In AUTO mode, turn light OFF when timeout expires
-      if (operatingMode == "AUTO") {
+      if (operatingMode == "AUTO" && currentLightState) {
         setRelayState(false, "INACTIVITY_TIMEOUT");
+        stateChanged = true;
       }
     }
+  }
+
+  // ULTRA-FAST SENSITIVE DISPATCH:
+  // If occupancy or relay changed state, dispatch instantly without waiting for periodic timer!
+  if (stateChanged) {
+    lastSensorPostTime = now;
+    postSensorData();
+    printSerialTelemetry();
   }
 }
 
