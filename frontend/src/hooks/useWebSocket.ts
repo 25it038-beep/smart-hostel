@@ -24,10 +24,13 @@ export function useRoomWebSocket(roomId: string, onMessage?: (data: WebSocketMes
   const connect = useCallback(() => {
     if (!roomId) return;
 
-    // Use current host and protocol for WebSocket
+    // Use current host and protocol for WebSocket, or override via VITE_WS_BASE_URL
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.host;
-    const wsUrl = `${protocol}//${host}/ws/rooms/${roomId}`;
+    const envWs = import.meta.env.VITE_WS_BASE_URL;
+    const wsUrl = envWs 
+      ? `${envWs.replace(/\/$/, '')}/ws/rooms/${roomId}`
+      : `${protocol}//${host}/ws/rooms/${roomId}`;
 
     try {
       const ws = new WebSocket(wsUrl);
