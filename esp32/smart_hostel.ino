@@ -19,6 +19,7 @@
 
 #include <WiFi.h>
 #include <HTTPClient.h>
+#include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
 #include <DHT.h>
 
@@ -45,9 +46,10 @@ const char* FIRMWARE_VER    = "v1.0.0";
 const char* WIFI_SSID       = "YOUR_WIFI_SSID";
 const char* WIFI_PASSWORD   = "YOUR_WIFI_PASSWORD";
 
-// Backend API URL (Replace with your computer's local IP where FastAPI is running)
-// Detected Local IP: http://192.168.0.102:8000
-const char* BACKEND_BASE_URL = "http://192.168.0.102:8000";
+// Backend API URL:
+// Cloud Deployed Render Backend: "https://smart-hostel-et9z.onrender.com"
+// Local Dev Alternative:         "http://192.168.0.102:8000"
+const char* BACKEND_BASE_URL = "https://smart-hostel-et9z.onrender.com";
 
 // ========================== TIMING INTERVALS (ms) ======================
 const unsigned long SENSOR_INTERVAL_MS    = 5000;    // Post telemetry every 5 seconds
@@ -134,12 +136,22 @@ void readDHTSensor() {
 }
 
 // ========================== NETWORK & HTTP =============================
+bool beginHttp(HTTPClient& http, WiFiClientSecure& secureClient, const String& url) {
+  if (url.startsWith("https://")) {
+    secureClient.setInsecure();
+    return http.begin(secureClient, url);
+  } else {
+    return http.begin(url);
+  }
+}
+
 void postSensorData() {
   if (WiFi.status() != WL_CONNECTED) return;
 
   HTTPClient http;
+  WiFiClientSecure secureClient;
   String url = String(BACKEND_BASE_URL) + "/api/sensors/data";
-  http.begin(url);
+  beginHttp(http, secureClient, url);
   http.addHeader("Content-Type", "application/json");
 
   StaticJsonDocument<256> doc;
@@ -170,8 +182,9 @@ void postHeartbeat() {
   if (WiFi.status() != WL_CONNECTED) return;
 
   HTTPClient http;
+  WiFiClientSecure secureClient;
   String url = String(BACKEND_BASE_URL) + "/api/devices/heartbeat";
-  http.begin(url);
+  beginHttp(http, secureClient, url);
   http.addHeader("Content-Type", "application/json");
 
   StaticJsonDocument<256> doc;
@@ -198,8 +211,9 @@ void pollCommands() {
   if (WiFi.status() != WL_CONNECTED) return;
 
   HTTPClient http;
+  WiFiClientSecure secureClient;
   String url = String(BACKEND_BASE_URL) + "/api/rooms/" + String(ROOM_ID) + "/command";
-  http.begin(url);
+  beginHttp(http, secureClient, url);
 
   int httpCode = http.GET();
   if (httpCode == HTTP_CODE_OK) {
